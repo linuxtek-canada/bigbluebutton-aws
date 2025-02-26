@@ -1,0 +1,52 @@
+# GitHub Actions Workflow to destroy all resources in the BBB Module
+#
+# NOTE: DO NOT RUN A BLANKET TERRAFORM DESTROY - IT WILL DESTROY THE TERRAFORM STATE AND LOCK FILES
+
+name: "Terraform Destroy"
+
+on: 
+  workflow_dispatch:
+
+env:
+  # Change to reflect your IAM role’s ARN
+  AWS_REGION : "ca-central-1" # Change to reflect your Region
+  AWS_ROLE_ARN: "arn:aws:iam::586794440352:role/GitHubAction-AssumeRoleWithAction"
+  AWS_ROLE_SESSION_NAME: "GitHub_to_AWS_via_Federated_OIDC"
+  
+  # Pull SSH IP and Key from Github Actions Secrets
+  TF_VAR_ssh_location: ${{ secrets.SSH_LOCATION }}
+  TF_VAR_ssh_public_key: ${{ secrets.SSH_RSA_PUB }}
+        
+permissions:
+      id-token: write   # This is required for requesting the JWT
+      contents: read    # This is required for actions/checkout
+
+jobs:
+  terraform:    
+    name: "Terraform Workflow"
+    runs-on: ubuntu-latest             
+    steps:
+      - name: Git clone the repository
+        uses: actions/checkout@v4
+
+      - name: Login AWS via Federated OIDC
+        uses: ./.github/actions/aws-login-action
+        with:
+          role-to-assume: ${{ env.AWS_ROLE_ARN }}
+          role-session-name: ${{ env.AWS_ROLE_SESSION_NAME }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.11.0        
+    
+      - name: Terraform Init
+        id: init
+        run: terraform init -input=false -upgrade
+        working-directory: environments/prod
+
+      - name: Terraform Destroy
+        id: destroy
+        run: terraform destroy -target module.bigbluebutton -auto-approve
+        working-directory: environments/prod
