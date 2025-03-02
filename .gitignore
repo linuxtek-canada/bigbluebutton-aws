@@ -1,6 +1,12 @@
 # Local .terraform directories
 **/.terraform/*
 
+# Temporary Secrets
+SECRETS.md
+
+# Saltstack codebase ignore for security.  For reference only.
+references/saltstack/
+
 # .tfstate files
 *.tfstate
 *.tfstate.*
