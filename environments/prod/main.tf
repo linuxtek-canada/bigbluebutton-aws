@@ -7,10 +7,13 @@ data "aws_caller_identity" "current" {}
 # https://github.com/cloudposse/terraform-aws-tfstate-backend
 
 module "terraform_state_backend" {
-  source  = "cloudposse/tfstate-backend/aws"  
-  version = "1.5.0"   
-  name       = "tfstate"
-  attributes = ["state"]
+  source  = "cloudposse/tfstate-backend/aws"
+  version = "1.5.0"
+
+  name        = "tfstate"
+  namespace   = "kwlug"
+  environment = "prod"
+  attributes  = [data.aws_caller_identity.current.account_id]
 
   terraform_backend_config_file_path = "."
   terraform_backend_config_file_name = "backend.tf"
