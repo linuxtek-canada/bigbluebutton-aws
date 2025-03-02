@@ -9,8 +9,10 @@ on:
     branches: [ main ]
 
 env:
-  
+  # Change to reflect your IAM role’s ARN
   AWS_REGION : "ca-central-1" # Change to reflect your Region
+  AWS_ROLE_ARN: "arn:aws:iam::586794440352:role/GitHubAction-AssumeRoleWithAction"
+  AWS_ROLE_SESSION_NAME: "GitHub_to_AWS_via_Federated_OIDC"
 
 # Permission can be added at job level or workflow level    
 permissions:
@@ -25,8 +27,8 @@ jobs:
       - name: configure aws credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: <arn:aws:iam::586794440352:role/GitHubAction-AssumeRoleWithAction> #change to reflect your IAM role’s ARN
-          role-session-name: GitHub_to_AWS_via_Federated_OIDC
+          role-to-assume: ${{ env.AWS_ROLE_ARN }}
+          role-session-name: ${{ env.AWS_ROLE_SESSION_NAME }}
           aws-region: ${{ env.AWS_REGION }}
       # Hello from AWS: WhoAmI
       - name: Sts GetCallerIdentity
