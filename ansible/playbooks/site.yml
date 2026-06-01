@@ -1,0 +1,8 @@
+---
+# Master playbook for BigBlueButton deployment
+
+- name: Deploy BigBlueButton Infrastructure
+  ansible.builtin.import_playbook: install-bigbluebutton.yml
+  tags:
+    - install
+    - bigbluebutton

@@ -1,0 +1,53 @@
+---
+# BigBlueButton Installation Playbook
+# This playbook installs and configures BigBlueButton on Ubuntu servers
+
+- name: Install BigBlueButton
+  hosts: bigbluebutton
+  become: true
+  gather_facts: true
+
+  vars_files:
+    - ../group_vars/all.yml
+
+  pre_tasks:
+    - name: Verify Ubuntu version
+      ansible.builtin.assert:
+        that:
+          - ansible_distribution == "Ubuntu"
+          - ansible_distribution_version is version('22.04', '>=')
+        fail_msg: "BigBlueButton 3.0 requires Ubuntu 22.04 or later"
+        success_msg: "Ubuntu {{ ansible_distribution_version }} detected"
+
+    - name: Check minimum memory (8GB recommended)
+      ansible.builtin.assert:
+        that:
+          - ansible_memtotal_mb >= 7500
+        fail_msg: "Warning: Less than 8GB RAM detected. BigBlueButton recommends at least 8GB."
+        success_msg: "Memory check passed: {{ ansible_memtotal_mb }}MB available"
+      ignore_errors: true
+
+    - name: Check minimum CPU cores (4 recommended)
+      ansible.builtin.assert:
+        that:
+          - ansible_processor_vcpus >= 4
+        fail_msg: "Warning: Less than 4 CPU cores detected. BigBlueButton recommends at least 4 cores."
+        success_msg: "CPU check passed: {{ ansible_processor_vcpus }} cores available"
+      ignore_errors: true
+
+  roles:
+    - role: bigbluebutton
+      tags:
+        - bigbluebutton
+
+  post_tasks:
+    - name: Display completion message
+      ansible.builtin.debug:
+        msg: |
+          ===========================================
+          BigBlueButton installation complete!
+          ===========================================
+          URL: https://{{ bbb_hostname }}
+          Admin User: {{ bbb_admin_user }}
+
+          See /root/bbb-installation-summary.txt for details

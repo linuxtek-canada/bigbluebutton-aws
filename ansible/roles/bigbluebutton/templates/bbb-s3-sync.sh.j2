@@ -1,0 +1,58 @@
+#!/bin/bash
+# BigBlueButton S3 Recording Sync Script
+# Syncs published recordings to S3
+
+set -euo pipefail
+
+# Load configuration
+source /opt/bbb-s3-sync/config
+
+# Directories
+PUBLISHED_DIR="{{ bbb_published_dir }}"
+LOG_FILE="/var/log/bbb-s3-sync/sync.log"
+
+log() {
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" >> "$LOG_FILE"
+}
+
+log "Starting S3 sync"
+
+# Check if AWS CLI is available
+if ! command -v aws &> /dev/null; then
+    log "ERROR: AWS CLI not found"
+    exit 1
+fi
+
+# Sync published recordings to S3
+if [[ -d "$PUBLISHED_DIR" ]]; then
+    # Find all presentation directories
+    for recording_dir in "$PUBLISHED_DIR"/presentation/*/; do
+        if [[ -d "$recording_dir" ]]; then
+            recording_id=$(basename "$recording_dir")
+
+            # Check if already synced
+            marker_file="$recording_dir/.s3_synced"
+            if [[ -f "$marker_file" ]]; then
+                continue
+            fi
+
+            log "Syncing recording: $recording_id"
+
+            # Sync to S3
+            if aws s3 sync "$recording_dir" "s3://${S3_BUCKET}/${S3_PREFIX}/${recording_id}/" \
+                --region "${AWS_REGION}" \
+                --no-progress; then
+
+                # Create marker file
+                touch "$marker_file"
+                log "Successfully synced: $recording_id"
+            else
+                log "ERROR: Failed to sync: $recording_id"
+            fi
+        fi
+    done
+else
+    log "Published directory not found: $PUBLISHED_DIR"
+fi
+
+log "S3 sync completed"

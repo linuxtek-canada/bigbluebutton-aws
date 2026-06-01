@@ -1,0 +1,59 @@
+# Ansible Lint Configuration
+# https://ansible.readthedocs.io/projects/lint/configuring/
+
+profile: production
+
+# Paths to exclude from linting
+exclude_paths:
+  - .cache/
+  - .git/
+  - venv/
+  - collections/
+
+# Enable specific rules
+enable_list:
+  - args
+  - empty-string-compare
+  - no-log-password
+  - no-same-owner
+
+# Skip specific rules
+skip_list:
+  - yaml[line-length]  # Allow longer lines in templates
+
+# Warn on specific rules instead of failing
+warn_list:
+  - experimental
+  - role-name[path]
+
+# Set working directory
+offline: false
+
+# Use progressive mode for gradual adoption
+progressive: false
+
+# Enable formatting rules
+strict: true
+
+# Variables to mock during linting
+mock_modules: []
+
+mock_roles: []
+
+# Extra variables for linting
+extra_vars: {}
+
+# Kinds configuration
+kinds:
+  - playbook: "**/playbooks/*.yml"
+  - tasks: "**/tasks/*.yml"
+  - handlers: "**/handlers/*.yml"
+  - vars: "**/vars/*.yml"
+  - defaults: "**/defaults/*.yml"
+  - meta: "**/meta/*.yml"
+
+# Loop variable prefix
+loop_var_prefix: "^(__|{role}_)"
+
+# Variables that should be lower-case
+var_naming_pattern: "^[a-z_][a-z0-9_]*$"

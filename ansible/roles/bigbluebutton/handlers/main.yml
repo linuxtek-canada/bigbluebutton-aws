@@ -1,0 +1,18 @@
+---
+# Handlers for BigBlueButton role
+
+- name: Restart BigBlueButton
+  ansible.builtin.command: bbb-conf --restart
+  listen: "Restart BigBlueButton"
+
+- name: Reload nginx
+  ansible.builtin.service:
+    name: nginx
+    state: reloaded
+  listen: "Reload nginx"
+
+- name: Restart FreeSWITCH
+  ansible.builtin.service:
+    name: freeswitch
+    state: restarted
+  listen: "Restart FreeSWITCH"

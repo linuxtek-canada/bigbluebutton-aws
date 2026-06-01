@@ -1,0 +1,72 @@
+name: "Terraform Apply - Prod"
+
+on:
+  workflow_dispatch:
+
+env:
+  AWS_REGION: ca-central-1
+  AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN_PROD }}
+  AWS_ROLE_SESSION_NAME: GitHub_to_AWS_Prod
+  TF_VAR_key_name: ${{ secrets.TF_VAR_KEY_NAME }}
+  TF_VAR_allowed_ssh_cidrs: ${{ secrets.TF_VAR_ALLOWED_SSH_CIDRS }}
+  TF_VAR_domain_name: ${{ secrets.TF_VAR_DOMAIN_NAME_PROD }}
+  TF_VAR_admin_email: ${{ secrets.TF_VAR_ADMIN_EMAIL }}
+  TF_VAR_ssh_private_key_path: ~/.ssh/bbb-key.pem
+  TF_VAR_bbb_admin_password: ${{ secrets.TF_VAR_BBB_ADMIN_PASSWORD }}
+  TF_VAR_admin_domain_name: ${{ secrets.TF_VAR_ADMIN_DOMAIN_NAME }}
+  TF_VAR_admin_acm_certificate_arn: ${{ secrets.TF_VAR_ADMIN_ACM_CERTIFICATE_ARN }}
+  TF_VAR_monthly_budget_limit: ${{ secrets.TF_VAR_MONTHLY_BUDGET_LIMIT_PROD }}
+  TF_VAR_monthly_budget_alert: ${{ secrets.TF_VAR_MONTHLY_BUDGET_ALERT_PROD }}
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    name: "Deploy Prod Environment"
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: environments/prod
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Ansible
+        run: pip install ansible-core>=2.15.0 jmespath>=1.0.0
+
+      - name: Setup SSH Key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/bbb-key.pem
+          chmod 600 ~/.ssh/bbb-key.pem
+
+      - name: AWS OIDC Login
+        uses: ./.github/actions/aws-login-action
+        with:
+          role-to-assume: ${{ env.AWS_ROLE_ARN }}
+          role-session-name: ${{ env.AWS_ROLE_SESSION_NAME }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.11.0
+
+      - name: Terraform Init
+        run: terraform init -input=false -upgrade
+
+      - name: Terraform Format Check
+        run: terraform fmt -check
+        continue-on-error: true
+
+      - name: Terraform Validate
+        run: terraform validate -no-color
+
+      - name: Terraform Plan
+        run: terraform plan -no-color -input=false
+
+      - name: Terraform Apply
+        run: terraform apply -no-color -auto-approve -input=false

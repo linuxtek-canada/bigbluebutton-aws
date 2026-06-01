@@ -1,0 +1,43 @@
+---
+# BigBlueButton Installation Variables
+# All values are templated for customization
+
+# Server Configuration
+bbb_hostname: "bbb.example.com"
+bbb_email: "admin@example.com"
+
+# BigBlueButton Version
+# jammy-300 = BigBlueButton 3.0 on Ubuntu 22.04
+# noble-300 = BigBlueButton 3.0 on Ubuntu 24.04 (when available)
+bbb_version: "jammy-300"
+
+# Installation Options
+bbb_install_greenlight: true
+bbb_install_firewall: true
+bbb_install_keycloak: false
+
+# External TURN Server (optional)
+# Format: hostname:secret
+bbb_turn_server: ""
+
+# LTI Integration (optional)
+# Format: key:secret
+bbb_lti_credentials: ""
+
+# AWS S3 Configuration for Recordings
+aws_region: "ca-central-1"
+s3_recordings_bucket: "bigbluebutton-recordings"
+s3_recordings_prefix: "recordings"
+
+# Enable S3 recording upload
+enable_s3_recordings: true
+
+# User Configuration
+bbb_service_user: "bigbluebutton"
+bbb_service_group: "bigbluebutton"
+bbb_admin_user: "bbb-admin"
+bbb_admin_password: ""  # Leave empty to generate random password
+
+# Recording Settings
+bbb_recording_retention_days: 30
+bbb_auto_delete_recordings: true

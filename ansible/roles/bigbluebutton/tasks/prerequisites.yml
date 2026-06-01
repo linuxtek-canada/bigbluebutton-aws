@@ -1,0 +1,73 @@
+---
+# Prerequisite installation tasks
+
+- name: Update apt cache
+  ansible.builtin.apt:
+    update_cache: yes
+    cache_valid_time: 3600
+
+- name: Install prerequisite packages
+  ansible.builtin.apt:
+    name:
+      - software-properties-common
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - gnupg
+      - lsb-release
+      - wget
+      - net-tools
+      - haveged
+      - build-essential
+      - git
+      - python3
+      - python3-pip
+      - unzip
+      - jq
+    state: present
+
+- name: Install S3 required packages
+  ansible.builtin.apt:
+    name: "{{ s3_required_packages }}"
+    state: present
+  when: enable_s3_recordings | default(false)
+
+- name: Enable and start haveged for entropy
+  ansible.builtin.systemd:
+    name: haveged
+    state: started
+    enabled: yes
+
+- name: Set hostname
+  ansible.builtin.hostname:
+    name: "{{ bbb_hostname }}"
+
+- name: Update /etc/hosts with hostname
+  ansible.builtin.lineinfile:
+    path: /etc/hosts
+    line: "127.0.0.1 {{ bbb_hostname }}"
+    state: present
+
+- name: Configure system limits
+  ansible.builtin.copy:
+    dest: /etc/security/limits.d/bigbluebutton.conf
+    content: |
+      # BigBlueButton system limits
+      *               soft    nofile          65536
+      *               hard    nofile          65536
+      *               soft    nproc           65536
+      *               hard    nproc           65536
+    mode: '0644'
+
+- name: Configure sysctl for BigBlueButton
+  ansible.builtin.sysctl:
+    name: "{{ item.name }}"
+    value: "{{ item.value }}"
+    state: present
+    reload: yes
+  loop:
+    - { name: 'net.core.rmem_max', value: '16777216' }
+    - { name: 'net.core.wmem_max', value: '16777216' }
+    - { name: 'net.ipv4.tcp_rmem', value: '4096 87380 16777216' }
+    - { name: 'net.ipv4.tcp_wmem', value: '4096 65536 16777216' }
+    - { name: 'net.core.netdev_max_backlog', value: '30000' }

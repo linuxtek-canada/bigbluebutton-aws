@@ -1,0 +1,5 @@
+# Ansible dependencies
+ansible-core>=2.15.0
+ansible-lint>=6.22.0
+yamllint>=1.33.0
+jmespath>=1.0.0

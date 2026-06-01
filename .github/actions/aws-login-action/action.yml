@@ -1,27 +1,28 @@
 name: "AWS OIDC Login"
-description: "Authenticate to AWS using Federated OIDC identity provider."
-author: "Jason Paul - Linuxtek Canada"
+description: "Authenticate to AWS using GitHub OIDC federation"
+author: "Jason Paul"
+
 inputs:
   role-to-assume:
-    description: "The ARN of the role to assume via OIDC."
+    description: "IAM role ARN to assume via OIDC"
     required: true
   role-session-name:
-    description: "The session name to use"
+    description: "Session name for AWS STS"
     required: true
   aws-region:
-    description: "AWS region to configure."
+    description: "AWS region to configure"
     required: true
-  
+
 runs:
   using: "composite"
-  steps:   
-    - name: Configure AWS credentials via OIDC
+  steps:
+    - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v4
       with:
         role-to-assume: ${{ inputs.role-to-assume }}
         role-session-name: ${{ inputs.role-session-name }}
         aws-region: ${{ inputs.aws-region }}
-        
-    - name: AWS STS GetCallerIdentity
-      run: aws sts get-caller-identity
+
+    - name: Verify AWS Identity
       shell: bash
+      run: aws sts get-caller-identity

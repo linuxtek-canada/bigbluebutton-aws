@@ -1,0 +1,60 @@
+---
+# S3 Integration tasks for BigBlueButton recordings
+
+- name: Create S3 sync script directory
+  ansible.builtin.file:
+    path: /opt/bbb-s3-sync
+    state: directory
+    mode: '0755'
+
+- name: Deploy S3 sync script
+  ansible.builtin.template:
+    src: bbb-s3-sync.sh.j2
+    dest: /opt/bbb-s3-sync/sync-recordings.sh
+    mode: '0755'
+
+- name: Deploy S3 sync configuration
+  ansible.builtin.template:
+    src: s3-sync-config.j2
+    dest: /opt/bbb-s3-sync/config
+    mode: '0600'
+
+- name: Create log directory for S3 sync
+  ansible.builtin.file:
+    path: /var/log/bbb-s3-sync
+    state: directory
+    mode: '0755'
+
+- name: Setup cron job for S3 sync
+  ansible.builtin.cron:
+    name: "BigBlueButton S3 Recording Sync"
+    minute: "{{ s3_sync_schedule.minute }}"
+    hour: "{{ s3_sync_schedule.hour }}"
+    day: "{{ s3_sync_schedule.day }}"
+    month: "{{ s3_sync_schedule.month }}"
+    weekday: "{{ s3_sync_schedule.weekday }}"
+    job: "/opt/bbb-s3-sync/sync-recordings.sh >> /var/log/bbb-s3-sync/sync.log 2>&1"
+    user: root
+
+- name: Deploy post-publish hook for immediate upload
+  ansible.builtin.template:
+    src: post_publish_s3.rb.j2
+    dest: /usr/local/bigbluebutton/core/scripts/post_publish/post_publish_s3.rb
+    mode: '0755'
+  notify: Restart BigBlueButton
+
+- name: Create recording cleanup script
+  ansible.builtin.template:
+    src: cleanup-recordings.sh.j2
+    dest: /opt/bbb-s3-sync/cleanup-recordings.sh
+    mode: '0755'
+  when: bbb_auto_delete_recordings | default(false)
+
+- name: Setup cron job for recording cleanup
+  ansible.builtin.cron:
+    name: "BigBlueButton Recording Cleanup"
+    minute: "0"
+    hour: "3"
+    job: "/opt/bbb-s3-sync/cleanup-recordings.sh >> /var/log/bbb-s3-sync/cleanup.log 2>&1"
+    user: root
+  when: bbb_auto_delete_recordings | default(false)

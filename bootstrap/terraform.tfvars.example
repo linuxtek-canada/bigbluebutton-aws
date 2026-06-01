@@ -1,0 +1,15 @@
+# Bootstrap Configuration
+
+aws_region   = "ca-central-1"
+project_name = "bigbluebutton"
+environments = ["dev", "prod"]
+
+# GitHub repository information for OIDC
+github_org  = "your-github-org"
+github_repo = "your-repo-name"
+
+tags = {
+  ManagedBy = "terraform"
+  Purpose   = "terraform-state"
+  Project   = "bigbluebutton"
+}

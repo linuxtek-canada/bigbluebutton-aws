@@ -1,0 +1,58 @@
+================================================================================
+BigBlueButton Installation Summary
+================================================================================
+
+Installation Date: {{ ansible_date_time.iso8601 }}
+Server Hostname: {{ bbb_hostname }}
+BigBlueButton Version: {{ bbb_version }}
+
+--------------------------------------------------------------------------------
+ACCESS INFORMATION
+--------------------------------------------------------------------------------
+
+Web Interface: https://{{ bbb_hostname }}
+{% if bbb_install_greenlight %}
+Greenlight: https://{{ bbb_hostname }}/b
+{% endif %}
+
+--------------------------------------------------------------------------------
+USER ACCOUNTS
+--------------------------------------------------------------------------------
+
+Service User: {{ bbb_service_user }}
+Admin User: {{ bbb_admin_user }}
+Admin Credentials: See /root/.bbb-admin-credentials
+
+--------------------------------------------------------------------------------
+RECORDING STORAGE
+--------------------------------------------------------------------------------
+
+{% if enable_s3_recordings %}
+S3 Bucket: {{ s3_recordings_bucket }}
+S3 Region: {{ aws_region }}
+S3 Prefix: {{ s3_recordings_prefix }}
+Sync Schedule: Every 15 minutes
+Retention: {{ bbb_recording_retention_days }} days local, then S3 only
+{% else %}
+Local Storage: {{ bbb_published_dir }}
+{% endif %}
+
+--------------------------------------------------------------------------------
+IMPORTANT FILES
+--------------------------------------------------------------------------------
+
+- BBB Secret: /root/.bbb-secret
+- Admin Credentials: /root/.bbb-admin-credentials
+- Installation Log: /var/log/bbb-install.log
+- S3 Sync Log: /var/log/bbb-s3-sync/sync.log
+
+--------------------------------------------------------------------------------
+USEFUL COMMANDS
+--------------------------------------------------------------------------------
+
+Check BBB Status:    bbb-conf --check
+Restart BBB:         bbb-conf --restart
+View BBB Secret:     bbb-conf --secret
+List Recordings:     bbb-record --list
+
+================================================================================
