@@ -123,6 +123,7 @@ module "security" {
   enable_config = false
 
   # SNS Topic for alerts
+  enable_sns_notifications = true
   sns_topic_arn = module.bigbluebutton.sns_topic_arn
 }
 

@@ -29,7 +29,7 @@ resource "aws_guardduty_detector" "main" {
 # GuardDuty SNS Notifications
 #------------------------------------------------------------------------------
 resource "aws_cloudwatch_event_rule" "guardduty_findings" {
-  count = var.enable_guardduty && var.sns_topic_arn != null ? 1 : 0
+  count = var.enable_guardduty && var.enable_sns_notifications ? 1 : 0
 
   name        = "${local.name_prefix}-guardduty-findings"
   description = "Capture GuardDuty findings"
@@ -48,7 +48,7 @@ resource "aws_cloudwatch_event_rule" "guardduty_findings" {
 }
 
 resource "aws_cloudwatch_event_target" "guardduty_sns" {
-  count = var.enable_guardduty && var.sns_topic_arn != null ? 1 : 0
+  count = var.enable_guardduty && var.enable_sns_notifications ? 1 : 0
 
   rule      = aws_cloudwatch_event_rule.guardduty_findings[0].name
   target_id = "SendToSNS"
