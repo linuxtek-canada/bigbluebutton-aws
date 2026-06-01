@@ -29,7 +29,7 @@ resource "aws_guardduty_detector" "main" {
 # GuardDuty SNS Notifications
 #------------------------------------------------------------------------------
 resource "aws_cloudwatch_event_rule" "guardduty_findings" {
-  count = var.enable_guardduty && var.sns_topic_arn != "" ? 1 : 0
+  count = var.enable_guardduty && var.sns_topic_arn != null ? 1 : 0
 
   name        = "${local.name_prefix}-guardduty-findings"
   description = "Capture GuardDuty findings"
