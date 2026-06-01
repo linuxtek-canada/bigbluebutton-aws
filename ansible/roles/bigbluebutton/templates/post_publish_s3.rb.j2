@@ -1,0 +1,59 @@
+#!/usr/bin/ruby
+# BigBlueButton post-publish script for S3 upload
+# This script runs automatically after a recording is published
+
+require 'fileutils'
+require 'logger'
+
+# Configuration
+S3_BUCKET = "{{ s3_recordings_bucket }}"
+S3_PREFIX = "{{ s3_recordings_prefix }}"
+AWS_REGION = "{{ aws_region }}"
+PUBLISHED_DIR = "{{ bbb_published_dir }}"
+
+# Setup logging
+LOG_FILE = "/var/log/bigbluebutton/post_publish_s3.log"
+logger = Logger.new(LOG_FILE, 'weekly')
+logger.level = Logger::INFO
+
+begin
+  # Get meeting ID from arguments
+  meeting_id = ARGV[0]
+
+  unless meeting_id
+    logger.error "No meeting ID provided"
+    exit 1
+  end
+
+  logger.info "Processing recording: #{meeting_id}"
+
+  # Path to published recording
+  recording_path = "#{PUBLISHED_DIR}/presentation/#{meeting_id}"
+
+  unless Dir.exist?(recording_path)
+    logger.error "Recording directory not found: #{recording_path}"
+    exit 1
+  end
+
+  # Sync to S3
+  s3_path = "s3://#{S3_BUCKET}/#{S3_PREFIX}/#{meeting_id}/"
+
+  cmd = "aws s3 sync '#{recording_path}' '#{s3_path}' --region #{AWS_REGION}"
+  logger.info "Running: #{cmd}"
+
+  result = system(cmd)
+
+  if result
+    # Create marker file to indicate successful sync
+    FileUtils.touch("#{recording_path}/.s3_synced")
+    logger.info "Successfully uploaded recording to S3: #{meeting_id}"
+  else
+    logger.error "Failed to upload recording to S3: #{meeting_id}"
+    exit 1
+  end
+
+rescue StandardError => e
+  logger.error "Error processing recording: #{e.message}"
+  logger.error e.backtrace.join("\n")
+  exit 1
+end

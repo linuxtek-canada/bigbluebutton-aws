@@ -1,0 +1,28 @@
+# Production Environment Configuration
+
+# AWS Configuration
+aws_region        = "ca-central-1"
+availability_zone = "ca-central-1a"
+
+# SSH Key (must exist in AWS)
+key_name = "your-prod-ssh-key"
+
+# Security - Restrict SSH to management IPs only
+allowed_ssh_cidrs = [
+  "10.0.0.0/8",        # Internal network
+  "YOUR_OFFICE_IP/32"  # Office IP
+]
+
+# Required: Domain name for HTTPS (production must use HTTPS)
+domain_name = "bbb.example.com"
+
+# Admin Dashboard Configuration
+admin_email = "admin@example.com"
+
+# Optional: Custom domain for admin dashboard
+admin_domain_name         = "admin.example.com"
+admin_acm_certificate_arn = "arn:aws:acm:ca-central-1:123456789012:certificate/xxxxx"
+
+# Cost Management
+monthly_budget_alert = 100  # Alert at $100 USD
+monthly_budget_limit = 200  # Stop resources at $200 USD (emergency protection)

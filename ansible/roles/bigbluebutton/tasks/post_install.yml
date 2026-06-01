@@ -1,0 +1,39 @@
+---
+# Post-installation tasks
+
+- name: Restart BigBlueButton to apply all changes
+  ansible.builtin.command: bbb-conf --restart
+  changed_when: true
+
+- name: Wait for BigBlueButton services to be ready
+  ansible.builtin.wait_for:
+    port: 443
+    host: 127.0.0.1
+    delay: 10
+    timeout: 300
+
+- name: Final BigBlueButton check
+  ansible.builtin.command: bbb-conf --check
+  register: final_check
+  changed_when: false
+
+- name: Create installation summary
+  ansible.builtin.template:
+    src: installation-summary.txt.j2
+    dest: /root/bbb-installation-summary.txt
+    mode: '0600'
+
+- name: Display installation summary
+  ansible.builtin.debug:
+    msg: |
+      BigBlueButton Installation Complete!
+      =====================================
+      Server URL: https://{{ bbb_hostname }}
+      Admin User: {{ bbb_admin_user }}
+      S3 Recording Bucket: {{ s3_recordings_bucket if enable_s3_recordings else 'Not configured' }}
+
+      Important Files:
+      - Admin Credentials: /root/.bbb-admin-credentials
+      - BBB Secret: /root/.bbb-secret
+      - Installation Summary: /root/bbb-installation-summary.txt
+      - Installation Log: /var/log/bbb-install.log

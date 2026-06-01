@@ -1,0 +1,30 @@
+---
+# BigBlueButton Installation Tasks
+
+- name: Include user creation tasks
+  ansible.builtin.include_tasks: users.yml
+  tags:
+    - users
+    - always
+
+- name: Include prerequisite tasks
+  ansible.builtin.include_tasks: prerequisites.yml
+  tags:
+    - prerequisites
+
+- name: Include BigBlueButton installation tasks
+  ansible.builtin.include_tasks: install.yml
+  tags:
+    - install
+
+- name: Include S3 integration tasks
+  ansible.builtin.include_tasks: s3_integration.yml
+  when: enable_s3_recordings | default(false)
+  tags:
+    - s3
+    - recordings
+
+- name: Include post-installation tasks
+  ansible.builtin.include_tasks: post_install.yml
+  tags:
+    - post_install

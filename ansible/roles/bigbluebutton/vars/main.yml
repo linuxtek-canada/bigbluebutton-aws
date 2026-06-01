@@ -1,0 +1,25 @@
+---
+# Role-specific variables (can be overridden in group_vars)
+
+# bbb-install script URL
+bbb_install_script_url: "https://raw.githubusercontent.com/bigbluebutton/bbb-install/v3.0.x-release/bbb-install.sh"
+
+# Required packages for S3 integration
+s3_required_packages:
+  - awscli
+  - python3-boto3
+  - jq
+
+# BigBlueButton directories
+bbb_recording_dir: "/var/bigbluebutton/recording"
+bbb_published_dir: "/var/bigbluebutton/published"
+bbb_unpublished_dir: "/var/bigbluebutton/unpublished"
+bbb_raw_dir: "/var/bigbluebutton/recording/raw"
+
+# S3 sync schedule (cron format)
+s3_sync_schedule:
+  minute: "*/15"
+  hour: "*"
+  day: "*"
+  month: "*"
+  weekday: "*"

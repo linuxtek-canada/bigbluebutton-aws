@@ -1,0 +1,46 @@
+#!/bin/bash
+# BigBlueButton Recording Cleanup Script
+# Removes local recordings that have been synced to S3 and are older than retention period
+
+set -euo pipefail
+
+# Load configuration
+source /opt/bbb-s3-sync/config
+
+LOG_FILE="/var/log/bbb-s3-sync/cleanup.log"
+
+log() {
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" >> "$LOG_FILE"
+}
+
+log "Starting recording cleanup"
+
+# Find recordings older than retention period that have been synced
+find "$PUBLISHED_DIR/presentation" -maxdepth 1 -type d -mtime +${RETENTION_DAYS} | while read -r dir; do
+    recording_id=$(basename "$dir")
+
+    # Skip if not a valid recording directory
+    if [[ "$recording_id" == "presentation" ]]; then
+        continue
+    fi
+
+    # Only delete if synced to S3
+    if [[ -f "$dir/.s3_synced" ]]; then
+        log "Removing old recording: $recording_id"
+
+        # Delete the published recording
+        rm -rf "$dir"
+
+        # Also clean up raw recording if exists
+        raw_dir="$RAW_DIR/$recording_id"
+        if [[ -d "$raw_dir" ]]; then
+            rm -rf "$raw_dir"
+        fi
+
+        log "Removed: $recording_id"
+    else
+        log "Skipping (not synced): $recording_id"
+    fi
+done
+
+log "Cleanup completed"

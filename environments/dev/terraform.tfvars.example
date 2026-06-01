@@ -1,0 +1,34 @@
+# Dev Environment Configuration
+
+# AWS Configuration
+aws_region        = "ca-central-1"
+availability_zone = "ca-central-1a"
+
+# SSH Key (must exist in AWS)
+key_name = "your-ssh-key-name"
+
+# Security - Restrict SSH to your IP
+allowed_ssh_cidrs = ["YOUR_IP_ADDRESS/32"]
+
+# Optional: Domain name for HTTPS
+domain_name = ""
+
+# Admin Dashboard Configuration
+admin_email = "admin@example.com"
+
+# Optional: Custom domain for admin dashboard
+admin_domain_name         = ""
+admin_acm_certificate_arn = ""
+
+# Cost Management
+monthly_budget_alert = 100  # Alert at $100 USD
+monthly_budget_limit = 200  # Stop resources at $200 USD
+
+# Auto Stop/Start (cost savings for dev)
+auto_stop_schedule  = "cron(0 22 ? * MON-FRI *)"  # Stop at 10pm UTC
+auto_start_schedule = "cron(0 12 ? * MON-FRI *)"  # Start at 12pm UTC
+
+# Security Features
+enable_cloudtrail = true
+enable_guardduty  = true
+enable_waf        = true

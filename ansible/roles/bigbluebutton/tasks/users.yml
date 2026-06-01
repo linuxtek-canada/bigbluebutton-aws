@@ -1,0 +1,79 @@
+---
+# User creation tasks
+
+- name: Create BigBlueButton service group
+  ansible.builtin.group:
+    name: "{{ bbb_service_group }}"
+    state: present
+    system: yes
+
+- name: Create BigBlueButton service user
+  ansible.builtin.user:
+    name: "{{ bbb_service_user }}"
+    group: "{{ bbb_service_group }}"
+    shell: /bin/false
+    home: /var/lib/bigbluebutton
+    create_home: yes
+    system: yes
+    comment: "BigBlueButton Service Account"
+
+- name: Generate admin password if not provided
+  ansible.builtin.set_fact:
+    bbb_admin_password_generated: "{{ lookup('password', '/dev/null length=16 chars=ascii_letters,digits') }}"
+  when: bbb_admin_password | default('') == ''
+  no_log: true
+
+- name: Set admin password fact
+  ansible.builtin.set_fact:
+    bbb_admin_final_password: "{{ bbb_admin_password | default(bbb_admin_password_generated) }}"
+  no_log: true
+
+- name: Create bbb-admin user with sudo access
+  ansible.builtin.user:
+    name: "{{ bbb_admin_user }}"
+    groups:
+      - sudo
+      - adm
+    append: yes
+    shell: /bin/bash
+    create_home: yes
+    password: "{{ bbb_admin_final_password | password_hash('sha512') }}"
+    comment: "BigBlueButton Administrator"
+
+- name: Configure sudo access for bbb-admin
+  ansible.builtin.copy:
+    dest: /etc/sudoers.d/bbb-admin
+    content: |
+      # BigBlueButton administrator sudo configuration
+      {{ bbb_admin_user }} ALL=(ALL) NOPASSWD: /usr/bin/bbb-conf, /usr/bin/bbb-record, /usr/bin/systemctl restart bbb*, /usr/bin/systemctl start bbb*, /usr/bin/systemctl stop bbb*
+    mode: '0440'
+    validate: 'visudo -cf %s'
+
+- name: Create .ssh directory for bbb-admin
+  ansible.builtin.file:
+    path: /home/{{ bbb_admin_user }}/.ssh
+    state: directory
+    owner: "{{ bbb_admin_user }}"
+    group: "{{ bbb_admin_user }}"
+    mode: '0700'
+
+- name: Copy authorized_keys from ubuntu user
+  ansible.builtin.copy:
+    src: /home/ubuntu/.ssh/authorized_keys
+    dest: /home/{{ bbb_admin_user }}/.ssh/authorized_keys
+    remote_src: yes
+    owner: "{{ bbb_admin_user }}"
+    group: "{{ bbb_admin_user }}"
+    mode: '0600'
+  ignore_errors: yes
+
+- name: Save admin credentials to file
+  ansible.builtin.copy:
+    dest: /root/.bbb-admin-credentials
+    content: |
+      # BigBlueButton Admin Credentials
+      # Generated: {{ ansible_date_time.iso8601 }}
+      Username: {{ bbb_admin_user }}
+      Password: {{ bbb_admin_final_password }}
+    mode: '0600'
+  no_log: true

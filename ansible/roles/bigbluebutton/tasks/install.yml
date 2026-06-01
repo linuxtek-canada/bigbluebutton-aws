@@ -1,0 +1,68 @@
+---
+# BigBlueButton installation tasks
+
+- name: Download bbb-install script
+  ansible.builtin.get_url:
+    url: "{{ bbb_install_script_url }}"
+    dest: /tmp/bbb-install.sh
+    mode: '0755'
+
+- name: Build bbb-install command
+  ansible.builtin.set_fact:
+    bbb_install_cmd: >-
+      /tmp/bbb-install.sh
+      -v {{ bbb_version }}
+      -s {{ bbb_hostname }}
+      -e {{ bbb_email }}
+      {{ '-w' if bbb_install_firewall | default(true) else '' }}
+      {{ '-g' if bbb_install_greenlight | default(false) else '' }}
+      {{ '-k' if bbb_install_keycloak | default(false) else '' }}
+      {{ '-c ' ~ bbb_turn_server if bbb_turn_server | default('') != '' else '' }}
+      {{ '-t ' ~ bbb_lti_credentials if bbb_lti_credentials | default('') != '' else '' }}
+
+- name: Display installation command
+  ansible.builtin.debug:
+    msg: "Installing BigBlueButton with: {{ bbb_install_cmd }}"
+
+- name: Run BigBlueButton installation script
+  ansible.builtin.shell: |
+    set -o pipefail
+    {{ bbb_install_cmd }} 2>&1 | tee /var/log/bbb-install.log
+  args:
+    executable: /bin/bash
+    creates: /usr/share/bbb-web
+  register: bbb_install_result
+  async: 3600
+  poll: 30
+
+- name: Wait for BigBlueButton services to start
+  ansible.builtin.wait_for:
+    port: "{{ item }}"
+    host: 127.0.0.1
+    delay: 10
+    timeout: 300
+  loop:
+    - 443
+    - 80
+
+- name: Check BigBlueButton status
+  ansible.builtin.command: bbb-conf --check
+  register: bbb_check
+  changed_when: false
+  failed_when: false
+
+- name: Display BigBlueButton check output
+  ansible.builtin.debug:
+    var: bbb_check.stdout_lines
+  when: bbb_check.rc == 0
+
+- name: Get BigBlueButton secret
+  ansible.builtin.command: bbb-conf --secret
+  register: bbb_secret
+  changed_when: false
+
+- name: Save BigBlueButton secret to file
+  ansible.builtin.copy:
+    dest: /root/.bbb-secret
+    content: "{{ bbb_secret.stdout }}"
+    mode: '0600'
