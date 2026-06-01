@@ -52,7 +52,7 @@ variable "s3_bucket_arns" {
 variable "sns_topic_arn" {
   description = "SNS topic ARN for security alerts"
   type        = string
-  default     = ""
+  default     = null
 }
 
 variable "tags" {
