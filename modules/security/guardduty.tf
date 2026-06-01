@@ -7,22 +7,28 @@ resource "aws_guardduty_detector" "main" {
   enable                       = true
   finding_publishing_frequency = "FIFTEEN_MINUTES"
 
-  datasources {
-    s3_logs {
-      enable = true
-    }
-    malware_protection {
-      scan_ec2_instance_with_findings {
-        ebs_volumes {
-          enable = true
-        }
-      }
-    }
-  }
-
   tags = merge(local.common_tags, {
     Name = "${local.name_prefix}-guardduty"
   })
+}
+
+#------------------------------------------------------------------------------
+# GuardDuty Features
+#------------------------------------------------------------------------------
+resource "aws_guardduty_detector_feature" "s3_logs" {
+  count = var.enable_guardduty ? 1 : 0
+
+  detector_id = aws_guardduty_detector.main[0].id
+  name        = "S3_DATA_EVENTS"
+  status      = "ENABLED"
+}
+
+resource "aws_guardduty_detector_feature" "ebs_malware" {
+  count = var.enable_guardduty ? 1 : 0
+
+  detector_id = aws_guardduty_detector.main[0].id
+  name        = "EBS_MALWARE_PROTECTION"
+  status      = "ENABLED"
 }
 
 #------------------------------------------------------------------------------

@@ -49,16 +49,16 @@ variable "s3_bucket_arns" {
   default     = []
 }
 
-variable "enable_sns_notifications" {
-  description = "Enable SNS notifications for security alerts"
-  type = bool
-  default = true
-}
-
 variable "sns_topic_arn" {
   description = "SNS topic ARN for security alerts"
   type        = string
   default     = null
+}
+
+variable "enable_sns_notifications" {
+  description = "Enable SNS notifications for security alerts"
+  type        = bool
+  default     = true
 }
 
 variable "tags" {

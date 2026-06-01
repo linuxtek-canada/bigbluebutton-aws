@@ -91,10 +91,11 @@ EOF
         sleep 10
       done
       echo "Instance ready. Running Ansible..."
+      cd ${path.module}/../../ansible && \
       ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook \
-        -i ${path.module}/../../ansible/inventory/hosts \
+        -i inventory/hosts \
         --private-key ${var.ssh_private_key_path} \
-        ${path.module}/../../ansible/playbooks/site.yml
+        playbooks/site.yml
     EOT
 
     environment = {
