@@ -48,7 +48,7 @@ resource "aws_cloudwatch_event_rule" "guardduty_findings" {
 }
 
 resource "aws_cloudwatch_event_target" "guardduty_sns" {
-  count = var.enable_guardduty && var.sns_topic_arn != "" ? 1 : 0
+  count = var.enable_guardduty && var.sns_topic_arn != null ? 1 : 0
 
   rule      = aws_cloudwatch_event_rule.guardduty_findings[0].name
   target_id = "SendToSNS"
